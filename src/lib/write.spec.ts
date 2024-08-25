@@ -4,11 +4,11 @@ import fs from 'fs';
 import write from './write';
 import init from './write.struct';
 
-test('[write] writes page file', async t => {
+test('[write] writes page', async t => {
   const { root, page, cleanup } = await init();
 
   try {
-    await write({ root })(page);
+    await write([page.file], { root });
 
     t.true(fs.existsSync(page.out));
   } catch (err) {
@@ -19,13 +19,13 @@ test('[write] writes page file', async t => {
   t.end();
 });
 
-test('[write] ignores asset if not specified', async t => {
-  const { root, stylesheet, cleanup } = await init();
+test('[write] writes asset', async t => {
+  const { root, page, stylesheet, cleanup } = await init();
 
   try {
-    await write({ root })(stylesheet.nested);
+    await write([page.file, stylesheet.base.file], { root });
 
-    t.false(fs.existsSync(stylesheet.nested.out));
+    t.true(fs.existsSync(stylesheet.base.out));
   } catch (err) {
     t.fail((err as Error).message);
   }
@@ -34,34 +34,31 @@ test('[write] ignores asset if not specified', async t => {
   t.end();
 });
 
-test('[write] writes asset if specified', async t => {
-  const { root, stylesheet, cleanup } = await init();
+test('[write] writes asset with filter path', async t => {
+  const { root, page, stylesheet, cleanup } = await init();
 
   try {
-    await write({
+    await write([page.file, stylesheet.nested.file], {
       root,
-      assets: [{ filter: /\.css$/u }]
-    })(stylesheet.root);
-
-    t.true(fs.existsSync(stylesheet.root.out));
-  } catch (err) {
-    t.fail((err as Error).message);
-  }
-
-  await cleanup();
-  t.end();
-});
-
-test('[write] writes asset with path if specified', async t => {
-  const { root, stylesheet, cleanup } = await init();
-
-  try {
-    await write({
-      root,
-      assets: [{ filter: /\.css$/u, path: 'css' }]
-    })(stylesheet.nested);
+      assets: [{ filter: /\.css$/u, path: '/css' }]
+    });
 
     t.true(fs.existsSync(stylesheet.nested.out));
+  } catch (err) {
+    t.fail((err as Error).message);
+  }
+
+  await cleanup();
+  t.end();
+});
+
+test('[write] does not write asset if not imported', async t => {
+  const { root, page, json, cleanup } = await init();
+
+  try {
+    await write([page.file, json.file], { root });
+
+    t.false(fs.existsSync(json.out));
   } catch (err) {
     t.fail((err as Error).message);
   }

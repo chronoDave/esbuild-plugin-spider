@@ -6,7 +6,7 @@ export type { Asset } from './lib/write';
 import fsp from 'fs/promises';
 import path from 'path';
 
-import createWrite from './lib/write';
+import write from './lib/write';
 
 export type SpiderOptions = Omit<WriteOptions, 'root'>;
 
@@ -19,15 +19,14 @@ export default (options: SpiderOptions): Plugin => ({
     const root = build.initialOptions.outdir ?
       path.join(process.cwd(), build.initialOptions.outdir) :
       process.cwd();
-    const write = createWrite({ ...options, root });
 
-    build.onEnd(results => results.outputFiles?.forEach(async file => {
+    build.onEnd(async results => {
       try {
-        write(file);
+        await write(results.outputFiles ?? [], { ...options, root });
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(err);
       }
-    }));
+    });
   }
 });

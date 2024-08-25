@@ -5,13 +5,13 @@
 
 <div align="center">
   <a href="/LICENSE">
-    <img alt="License GPLv3" src="https://img.shields.io/badge/license-GPLv3-blue.svg" />
+    <img alt="License AGPLv3" src="https://img.shields.io/badge/license-AGPLv3-blue.svg" />
   </a>
-  <a href="https://www.npmjs.com/package/@chronocide/spider">
-    <img alt="NPM" src="https://img.shields.io/npm/v/@chronocide/spider?label=npm">
+  <a href="https://www.npmjs.com/package/@chronocide/esbuild-plugin-spider">
+    <img alt="NPM" src="https://img.shields.io/npm/v/@chronocide/esbuild-plugin-spider?label=npm">
   </a>
-  <a href="https://packagephobia.com/result?p=@chronocide/spider">
-    <img alt="Bundle size" src="https://packagephobia.com/badge?p=@chronocide/spider">
+  <a href="https://packagephobia.com/result?p=@chronocide/esbuild-plugin-spider">
+    <img alt="Bundle size" src="https://packagephobia.com/badge?p=@chronocide/esbuild-plugin-spider">
   </a>
 </div>
 
@@ -25,7 +25,7 @@ npm i @chronocide/esbuild-plugin-spider -D
 
 ## Usage
 
-As `spider` transforms `esbuild` output files, `write` is set to [`false`](https://esbuild.github.io/api/#write). Files imported within page files are not written by default and are handled by the [`assets`](#assets) option.
+As `spider` transforms `esbuild` output files, `write` is set to [`false`](https://esbuild.github.io/api/#write). Files imported within pages will be exported to the same location as the page files by default.
 
 ```JS
 import esbuild from 'esbuild';
@@ -69,7 +69,9 @@ esbuild.build({
 
 #### `assets`
 
-By default, all non-page files will be ignored. `filter` will come before `assets`, so make sure to use `filter` if importing `js` files.
+By default, all imported asset files will be written to the same directory as the page files. `filter` can be used to change the root directory (relative to the output directory) of specific asset files.
+
+`filter` will come before `assets`, so make sure to use `filter` if importing `js` files.
 
 ```TS
 import esbuild from 'esbuild';
@@ -80,8 +82,18 @@ esbuild.build({
   plugins: [spider({
     outdir: 'dist',
     assets: [
-      { filter: /\.css$/ }, // src/index.css => dist/index.css
-      { filter: /\.woff$/, path: 'fonts' } // src/assets/font.woff => dist/fonts/assets/font.woff
+      /**
+       * Url:     / 
+       * Asset:   src/index.css
+       * Out:     dist/css/index.css
+       */
+      { filter: /\.css$/, path: 'css' },
+      /**
+       *  Url:    /about
+       *  Asset:  src/scss/pages/about.css
+       *  Out:    dist/css/about/about.css
+       */
+      { filter: /\.css$/, path: 'css' }
     ]
   })]
 });

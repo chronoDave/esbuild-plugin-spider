@@ -1,12 +1,12 @@
 import type { OutputFile } from 'esbuild';
 
-import { bundle } from  '@chronocide/spider';
+import { bundle } from '@chronocide/spider';
 import path from 'path';
 import fsp from 'fs/promises';
 
 export type Asset = {
   filter: RegExp;
-  path?: string;
+  path: string;
 };
 
 export type WriteOptions = {
@@ -17,20 +17,46 @@ export type WriteOptions = {
   assets?: Asset[];
 };
 
-export default (options: WriteOptions) => async (file: OutputFile) => {
-  if ((options.filter ?? /\.js$/u).test(file.path)) {
-    const result = await bundle(Buffer.from(file.contents));
+export default async (files: OutputFile[], options: WriteOptions) => {
+  const pages = new Map<string, string>();
+  const filter = options?.filter ?? /\.js$/u;
 
-    await fsp.writeFile(path.join(options.root, result.path), result.html);
-  } else {
-    const assets = options.assets?.filter(asset => asset.filter.test(file.path)) ?? [];
+  await Promise.all(files
+    .filter(file => filter.test(file.path))
+    .map(async page => {
+      const result = await bundle(Buffer.from(page.contents));
+      pages.set(path.parse(page.path).dir, path.parse(result.path).dir);
 
-    await Promise.all(assets?.map(async asset => {
-      const rel = file.path.replace(options.root, '');
-      const out = path.join(options.root, asset.path ?? '', rel);
+      return fsp.writeFile(path.join(options.root, result.path), result.html);
+    })
+  );
+
+  /**
+   * 1) Find all non-page files (assets)
+   * 2) If asset is imported by a page, it'll share the same dir
+   *    If so, get that dir (as it's changed by spider)
+   * 3) If there's an asset filter, apply asset path
+   *    /:root:/:filter:/:dir:/, e.g.
+   * 
+   *    page: /src/about/about.js (url /about)
+   *    css: /src/about/about.css
+   * 
+   *    outdir:      /dist
+   *    filter path: /css
+   * 
+   *    out: /dist/css/about.css
+   */
+
+  await Promise.all(files
+    .filter(file => !filter.test(file.path) && pages.has(path.parse(file.path).dir))
+    .map(async file => {
+      const asset = path.parse(file.path);
+
+      const dir = pages.get(asset.dir)!.replace(options.root, '');
+      const root = options.assets?.find(asset => asset.filter.test(file.path))?.path ?? '';
+      const out = path.join(options.root, root, dir, asset.base);
 
       await fsp.mkdir(path.parse(out).dir, { recursive: true });
-      return fsp.writeFile(out, file.text);
+      await fsp.writeFile(out, file.text);
     }));
-  }
 };
