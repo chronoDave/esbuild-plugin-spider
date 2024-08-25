@@ -4,6 +4,7 @@ import type { WriteOptions } from './lib/write';
 export type { Asset } from './lib/write';
 
 import fsp from 'fs/promises';
+import path from 'path';
 
 import createWrite from './lib/write';
 
@@ -15,7 +16,9 @@ export default (options: SpiderOptions): Plugin => ({
     build.initialOptions.write = false; // Spider overwrites esbuild output
 
     if (build.initialOptions.outdir) await fsp.mkdir(build.initialOptions.outdir, { recursive: true });
-    const root = build.initialOptions.outdir ?? process.cwd();
+    const root = build.initialOptions.outdir ?
+      path.join(process.cwd(), build.initialOptions.outdir) :
+      process.cwd();
     const write = createWrite({ ...options, root });
 
     build.onEnd(results => results.outputFiles?.forEach(async file => {
