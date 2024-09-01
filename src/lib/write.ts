@@ -24,10 +24,14 @@ export default async (files: OutputFile[], options?: WriteOptions) => {
   await Promise.all(files
     .filter(file => filter.test(file.path))
     .map(async page => {
-      const result = await bundle(page.path); // Prevent Buffer logs
-      pages.set(path.parse(page.path).dir, path.parse(result.path).dir);
-
-      return fsp.writeFile(path.join(options?.root ?? process.cwd(), result.path), result.html);
+      try {
+        const result = await bundle(Buffer.from(page.contents));
+        pages.set(path.parse(page.path).dir, path.parse(result.path).dir);
+  
+        return fsp.writeFile(path.join(options?.root ?? process.cwd(), result.path), result.html);
+      } catch (err) {
+        throw new Error(`${(err as Error).message} at ${page.path}`);
+      }
     })
   );
 
