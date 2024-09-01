@@ -17,17 +17,17 @@ export type WriteOptions = {
   assets?: Asset[];
 };
 
-export default async (files: OutputFile[], options: WriteOptions) => {
+export default async (files: OutputFile[], options?: WriteOptions) => {
   const pages = new Map<string, string>();
   const filter = options?.filter ?? /\.js$/u;
 
   await Promise.all(files
     .filter(file => filter.test(file.path))
     .map(async page => {
-      const result = await bundle(Buffer.from(page.contents));
+      const result = await bundle(page.path); // Prevent Buffer logs
       pages.set(path.parse(page.path).dir, path.parse(result.path).dir);
 
-      return fsp.writeFile(path.join(options.root, result.path), result.html);
+      return fsp.writeFile(path.join(options?.root ?? process.cwd(), result.path), result.html);
     })
   );
 
@@ -52,9 +52,9 @@ export default async (files: OutputFile[], options: WriteOptions) => {
     .map(async file => {
       const asset = path.parse(file.path);
 
-      const dir = pages.get(asset.dir)!.replace(options.root, '');
-      const root = options.assets?.find(asset => asset.filter.test(file.path))?.path ?? '';
-      const out = path.join(options.root, root, dir, asset.base);
+      const dir = pages.get(asset.dir)!.replace(options?.root ?? process.cwd(), '');
+      const root = options?.assets?.find(asset => asset.filter.test(file.path))?.path ?? '';
+      const out = path.join(options?.root ?? process.cwd(), root, dir, asset.base);
 
       await fsp.mkdir(path.parse(out).dir, { recursive: true });
       await fsp.writeFile(out, file.text);

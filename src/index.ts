@@ -10,7 +10,7 @@ import write from './lib/write';
 
 export type SpiderOptions = Omit<WriteOptions, 'root'>;
 
-export default (options: SpiderOptions): Plugin => ({
+export default (options?: SpiderOptions): Plugin => ({
   name: '@chronocide/esbuild-plugin-spider',
   setup: async build => {
     build.initialOptions.write = false; // Spider overwrites esbuild output

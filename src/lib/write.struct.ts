@@ -50,12 +50,33 @@ export default async () => {
     text: 'export default () => console.log("")'
   });
 
-  await fsp.mkdir(root, { recursive: true });
+  const error = outputFile({
+    in: 'tmp/blog/blog.js',
+    out: 'tmp/json/blog.js',
+    text: 'err'
+  });
+
+  await Promise.all([
+    fsp.mkdir(path.parse(page.file.path).dir, { recursive: true }),
+    fsp.mkdir(path.parse(stylesheet.base.file.path).dir, { recursive: true }),
+    fsp.mkdir(path.parse(stylesheet.nested.file.path).dir, { recursive: true }),
+    fsp.mkdir(path.parse(json.file.path).dir, { recursive: true }),
+    fsp.mkdir(path.parse(error.file.path).dir, { recursive: true })
+  ]);
+
+  await Promise.all([
+    fsp.writeFile(page.file.path, page.file.text),
+    fsp.writeFile(stylesheet.base.file.path, stylesheet.base.file.text),
+    fsp.writeFile(stylesheet.nested.file.path, stylesheet.nested.file.text),
+    fsp.writeFile(json.file.path, json.file.text),
+    fsp.writeFile(error.file.path, error.file.text)
+  ]);
 
   return {
     root,
     page,
     json,
+    error,
     stylesheet,
     cleanup: () => fsp.rm(root, { recursive: true, force: true })
   };

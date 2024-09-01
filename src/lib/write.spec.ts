@@ -1,5 +1,6 @@
 import test from 'tape';
 import fs from 'fs';
+import path from 'path';
 
 import write from './write';
 import init from './write.struct';
@@ -61,6 +62,21 @@ test('[write] does not write asset if not imported', async t => {
     t.false(fs.existsSync(json.out));
   } catch (err) {
     t.fail((err as Error).message);
+  }
+
+  await cleanup();
+  t.end();
+});
+
+test('[write] throws readable error', async t => {
+  const { root, error, cleanup } = await init();
+
+  try {
+    await write([error.file], { root });
+
+    t.fail('expected to throw');
+  } catch (err) {
+    t.true((err as Error).stack?.includes('file://'));
   }
 
   await cleanup();
