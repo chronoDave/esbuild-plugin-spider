@@ -82,3 +82,17 @@ test('[write] throws readable error', async t => {
   await cleanup();
   t.end();
 });
+
+test('[write] ignores empty files', async t => {
+  const { empty, root, cleanup } = await init();
+
+  try {
+    await write([empty.file], { root });
+    t.false(fs.existsSync(empty.out));
+  } catch (err) {
+    t.fail((err as Error).message);
+  }
+
+  await cleanup();
+  t.end();
+});

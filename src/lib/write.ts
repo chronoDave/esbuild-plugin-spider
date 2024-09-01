@@ -26,6 +26,8 @@ export default async (files: OutputFile[], options?: WriteOptions) => {
     .map(async page => {
       try {
         const result = await bundle(Buffer.from(page.contents));
+        if (!result) return;
+
         pages.set(path.parse(page.path).dir, path.parse(result.path).dir);
   
         return fsp.writeFile(path.join(options?.root ?? process.cwd(), result.path), result.html);
