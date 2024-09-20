@@ -23,6 +23,7 @@ const outputFile = (page: Page): Output => ({
   }
 });
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default async () => {
   const root = path.join(process.cwd(), 'tmp');
   const page = outputFile({
@@ -87,7 +88,7 @@ export default async () => {
     error,
     empty,
     stylesheet,
-    cleanup: () => fsp.rm(root, { recursive: true, force: true })
+    cleanup: async () => fsp.rm(root, { recursive: true, force: true })
   };
 };
 

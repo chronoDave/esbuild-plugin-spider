@@ -76,7 +76,7 @@ test('[write] throws readable error', async t => {
 
     t.fail('expected to throw');
   } catch (err) {
-    t.true((err as Error).message?.includes(path.parse(error.file.path).base));
+    t.true((err as Error).message.includes(path.parse(error.file.path).base));
   }
 
   await cleanup();

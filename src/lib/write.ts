@@ -17,7 +17,7 @@ export type WriteOptions = {
   assets?: Asset[];
 };
 
-export default async (files: OutputFile[], options?: WriteOptions) => {
+export default async (files: OutputFile[], options?: WriteOptions): Promise<void> => {
   const pages = new Map<string, string>();
   const filter = options?.filter ?? /\.js$/u;
 
@@ -30,7 +30,7 @@ export default async (files: OutputFile[], options?: WriteOptions) => {
 
         pages.set(path.parse(page.path).dir, path.parse(result.path).dir);
   
-        return fsp.writeFile(path.join(options?.root ?? process.cwd(), result.path), result.html);
+        await fsp.writeFile(path.join(options?.root ?? process.cwd(), result.path), result.html);
       } catch (err) {
         throw new Error(`${(err as Error).message} at ${page.path}`);
       }
@@ -58,6 +58,7 @@ export default async (files: OutputFile[], options?: WriteOptions) => {
     .map(async file => {
       const asset = path.parse(file.path);
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const dir = pages.get(asset.dir)!.replace(options?.root ?? process.cwd(), '');
       const root = options?.assets?.find(asset => asset.filter.test(file.path))?.path ?? '';
       const out = path.join(options?.root ?? process.cwd(), root, dir, asset.base);

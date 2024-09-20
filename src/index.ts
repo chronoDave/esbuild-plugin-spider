@@ -15,8 +15,8 @@ export default (options?: SpiderOptions): Plugin => ({
   setup: async build => {
     build.initialOptions.write = false; // Spider overwrites esbuild output
 
-    if (build.initialOptions.outdir) await fsp.mkdir(build.initialOptions.outdir, { recursive: true });
-    const root = build.initialOptions.outdir ?
+    if (typeof build.initialOptions.outdir === 'string') await fsp.mkdir(build.initialOptions.outdir, { recursive: true });
+    const root = typeof build.initialOptions.outdir === 'string' ?
       path.join(process.cwd(), build.initialOptions.outdir) :
       process.cwd();
 
@@ -24,7 +24,6 @@ export default (options?: SpiderOptions): Plugin => ({
       try {
         await write(results.outputFiles ?? [], { ...options, root });
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.error(err);
       }
     });
