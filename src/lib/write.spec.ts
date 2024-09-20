@@ -12,6 +12,9 @@ test('[write] writes page', async t => {
     await write([page.file], { root });
 
     t.true(fs.existsSync(page.out));
+
+    const date = new Date(+fs.readFileSync(page.out, 'utf-8')).getTime();
+    t.true(Date.now() > date, 'sets last modified date');
   } catch (err) {
     t.fail((err as Error).message);
   }

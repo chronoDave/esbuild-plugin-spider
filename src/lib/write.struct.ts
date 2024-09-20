@@ -29,7 +29,7 @@ export default async () => {
   const page = outputFile({
     in: 'tmp/about/about.js',
     out: 'tmp/about.html',
-    text: 'export default { url: "/about", html: () => "" };'
+    text: 'export default { url: "/about", html: ({ lastModified }) => `${lastModified.getTime()}` };'
   });
 
   const stylesheet = {

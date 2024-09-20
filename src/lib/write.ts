@@ -25,7 +25,7 @@ export default async (files: OutputFile[], options?: WriteOptions): Promise<void
     .filter(file => filter.test(file.path))
     .map(async page => {
       try {
-        const result = await bundle(Buffer.from(page.contents));
+        const result = await bundle(Buffer.from(page.contents), { lastModified: (await fsp.stat(page.path)).mtime });
         if (!result) return;
 
         pages.set(path.parse(page.path).dir, path.parse(result.path).dir);
