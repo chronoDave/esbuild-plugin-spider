@@ -10,10 +10,7 @@ build({
   entryPoints: ['src/**/*.spec.ts'],
   outdir,
   bundle: true,
-  external: [
-    'tape',
-    'spider'
-  ],
+  packages: 'external',
   platform: 'node',
   format: 'esm'
 });

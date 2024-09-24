@@ -12,6 +12,7 @@ export default [{
     })
   ],
   external: [
+    'fs',
     'fs/promises',
     '@chronocide/spider',
     'path'

@@ -25,7 +25,7 @@ npm i @chronocide/esbuild-plugin-spider -D
 
 ## Usage
 
-As `spider` transforms `esbuild` output files, `write` is set to [`false`](https://esbuild.github.io/api/#write). Files imported within pages will be exported to the same location as the page files by default.
+As `spider` transforms `esbuild` output files, [`write`](https://esbuild.github.io/api/#write) is set to `false` and [`metafile`](https://esbuild.github.io/api/#metafile) is set to `true`. CSS imported within pages will be exported to the same location as the page file.
 
 ```JS
 import esbuild from 'esbuild';
@@ -34,67 +34,5 @@ import spider from 'esbuild-plugin-spider';
 esbuild.build({
   ...
   plugins: [spider()]
-});
-```
-
-### Options
-
-| Option | Type | Default
-| - | - | - |
-| `filter` | `RegExp` | `null` |
-| `assets` | `Asset[]` | `[]` |
-
-```TS
-type Asset = {
-  filter: RegExp;
-  path: string;
-}
-```
-
-#### `filter`
-
-By default, `esbuild-plugin-spider` treats `.js` files as page files. This can be overwritten with the `filter` option.
-
-```TS
-import esbuild from 'esbuild';
-import spider from 'esbuild-plugin-spider';
-
-esbuild.build({
-  ...
-  plugins: [spider({
-    filter: /\.page\.js$/
-  })]
-});
-```
-
-#### `assets`
-
-By default, all imported asset files will be written to the same directory as the page files. `filter` can be used to change the root directory (relative to the output directory) of specific asset files.
-
-`filter` will come before `assets`, so make sure to use `filter` if importing `js` files.
-
-```TS
-import esbuild from 'esbuild';
-import spider from 'esbuild-plugin-spider';
-
-esbuild.build({
-  ...
-  plugins: [spider({
-    outdir: 'dist',
-    assets: [
-      /**
-       * Url:     / 
-       * Asset:   src/index.css
-       * Out:     dist/css/index.css
-       */
-      { filter: /\.css$/, path: 'css' },
-      /**
-       *  Url:    /about
-       *  Asset:  src/scss/pages/about.css
-       *  Out:    dist/css/about/about.css
-       */
-      { filter: /\.css$/, path: 'css' }
-    ]
-  })]
 });
 ```

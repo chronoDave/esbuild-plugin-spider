@@ -1,31 +1,36 @@
 import type { Plugin } from 'esbuild';
-import type { WriteOptions } from './lib/write';
 
-export type { Asset } from './lib/write';
-
-import fsp from 'fs/promises';
 import path from 'path';
 
+import transform from './lib/transform';
+import link from './lib/link';
 import write from './lib/write';
+import { notNull } from './lib/is';
 
-export type SpiderOptions = Omit<WriteOptions, 'root'>;
+export default (): Plugin => {
+  const name = '@chronocide/esbuild-plugin-spider';
 
-export default (options?: SpiderOptions): Plugin => ({
-  name: '@chronocide/esbuild-plugin-spider',
-  setup: async build => {
-    build.initialOptions.write = false; // Spider overwrites esbuild output
+  return {
+    name,
+    setup: build => {
+      build.initialOptions.write = false; // Spider overwrites esbuild output
+      build.initialOptions.metafile = true; // Spider overwrites esbuild metafile
 
-    if (typeof build.initialOptions.outdir === 'string') await fsp.mkdir(build.initialOptions.outdir, { recursive: true });
-    const root = typeof build.initialOptions.outdir === 'string' ?
-      path.join(process.cwd(), build.initialOptions.outdir) :
-      process.cwd();
+      const root = typeof build.initialOptions.outdir === 'string' ?
+        path.join(process.cwd(), build.initialOptions.outdir) :
+        process.cwd();
 
-    build.onEnd(async results => {
-      try {
-        await write(results.outputFiles ?? [], { ...options, root });
-      } catch (err) {
-        console.error(err);
-      }
-    });
-  }
-});
+      build.onEnd(async results => {
+        if (!results.metafile) throw new Error('Missing metafile');
+        if (!results.outputFiles) throw new Error('Missing outputFiles');
+
+        const files = await Promise.all(link(
+          results.metafile.outputs,
+          results.outputFiles
+        ).map(transform)).then(files => files.filter(notNull));
+
+        await Promise.all(files.map(write(root)));
+      });
+    }
+  };
+};

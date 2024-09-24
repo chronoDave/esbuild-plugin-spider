@@ -1,0 +1,14 @@
+import type { Page } from '@chronocide/spider';
+
+import add from './lib';
+
+import './page.css';
+
+add(1, 2);
+
+const page: Page = {
+  url: '/',
+  html: ({ lastModified }) => `${lastModified.getTime()}`
+};
+
+export default page;
