@@ -10,7 +10,7 @@ test('[esbuild-plugin-spider] builds files', async t => {
   try {
     t.true(await fsp.stat(path.join(root, '/index.html')), 'has index');
     t.true(await fsp.stat(path.join(root, '/about.html')), 'has about');
-    t.true(await fsp.stat(path.join(root, '/blog/entry.html')), 'has blog');
+    t.true(await fsp.stat(path.join(root, '/blog/a.html')), 'has blog');
   
     const file = await fsp.readFile(path.join(root, '/index.html'), 'utf-8');
   

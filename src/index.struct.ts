@@ -30,7 +30,7 @@ export default async (): Promise<StructResult> => {
     },
     blog: {
       file: path.join(root, 'blog.ts'),
-      data: 'export const url = "/blog/entry"; export default "<p>Blog entry</p>";'
+      data: 'export default [{ url: "/blog/a", html: "a" }, { url: "/blog/b", html: "b" }]'
     }
   };
 
