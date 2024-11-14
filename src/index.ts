@@ -1,36 +1,45 @@
 import type { Plugin } from 'esbuild';
 
+import createSpider from '@chronocide/spider';
+
 import path from 'path';
+import fsp from 'fs/promises';
 
-import transform from './lib/transform';
-import link from './lib/link';
-import write from './lib/write';
-import { notNull } from './lib/is';
+export default (): Plugin => ({
+  name: '@chronocide/esbuild-plugin-spider',
+  setup: build => {
+    build.initialOptions.write = false; // As spider sets output locations, write must be disabled
+    build.initialOptions.metafile = true; // Metafile must be enabled to get a reference to the source file
+    build.initialOptions.format = 'esm'; // Spider only supports esm formatting
+    build.initialOptions.bundle = true; // Files must be bundled
 
-export default (): Plugin => {
-  const name = '@chronocide/esbuild-plugin-spider';
+    const spider = createSpider({ outdir: build.initialOptions.outdir, write: true });
 
-  return {
-    name,
-    setup: build => {
-      build.initialOptions.write = false; // Spider overwrites esbuild output
-      build.initialOptions.metafile = true; // Spider overwrites esbuild metafile
+    build.onEnd(async results => {
+      if (!results.metafile) throw new Error('Missing metafile');
+      if (!results.outputFiles) throw new Error('Missing outputFiles');
 
-      const root = typeof build.initialOptions.outdir === 'string' ?
-        path.join(process.cwd(), build.initialOptions.outdir) :
-        process.cwd();
+      const files = await Promise.all(results.outputFiles.map(async file => {
+        const id = file.path
+          .replace(process.cwd(), '')
+          .replaceAll(path.sep, '/')
+          .slice(1);
+        const input = results.metafile?.outputs[id]?.entryPoint;
 
-      build.onEnd(async results => {
-        if (!results.metafile) throw new Error('Missing metafile');
-        if (!results.outputFiles) throw new Error('Missing outputFiles');
+        return {
+          id,
+          buffer: Buffer.from(file.text),
+          stats: typeof input === 'string' ? await fsp.stat(input) : undefined
+        };
+      }));
 
-        const files = await Promise.all(link(
-          results.metafile.outputs,
-          results.outputFiles
-        ).map(transform)).then(files => files.filter(notNull));
-
-        await Promise.all(files.map(write(root)));
-      });
-    }
-  };
-};
+      await Promise.all(files.map(async file => {
+        try {
+          return await spider(file.buffer, file.stats);
+        } catch (err) {
+          throw new Error(`${file.id}: ${(err as Error).message}`);
+        }
+      }));
+    });
+  }
+});

@@ -25,14 +25,20 @@ npm i @chronocide/esbuild-plugin-spider -D
 
 ## Usage
 
-As `spider` transforms `esbuild` output files, [`write`](https://esbuild.github.io/api/#write) is set to `false` and [`metafile`](https://esbuild.github.io/api/#metafile) is set to `true`. CSS imported within pages will be exported to the same location as the page file.
+As `spider` transforms and writes files, the following `esbuild` options will always be overriden:
+
+- [`write`](https://esbuild.github.io/api/#write): As spider sets output locations, write must be disabled
+- [`metafile`](https://esbuild.github.io/api/#metafile): Metafile must be enabled to get a reference to the source file
+- [`format`](https://esbuild.github.io/api/#format): Spider only supports `esm`
+- [`bundle`](https://esbuild.github.io/api/#bundle): Files must be bundled
 
 ```JS
 import esbuild from 'esbuild';
-import spider from 'esbuild-plugin-spider';
+import spider from '@chronocide/esbuild-plugin-spider';
 
 esbuild.build({
-  ...
+  entryPoints: ['tmp/**/*.ts'],
+  outdir: 'dist',
   plugins: [spider()]
 });
 ```
