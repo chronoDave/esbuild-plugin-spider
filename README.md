@@ -10,9 +10,6 @@
   <a href="https://www.npmjs.com/package/@chronocide/esbuild-plugin-spider">
     <img alt="NPM" src="https://img.shields.io/npm/v/@chronocide/esbuild-plugin-spider?label=npm">
   </a>
-  <a href="https://packagephobia.com/result?p=@chronocide/esbuild-plugin-spider">
-    <img alt="Bundle size" src="https://packagephobia.com/badge?p=@chronocide/esbuild-plugin-spider">
-  </a>
 </div>
 
 ## Installation
@@ -25,10 +22,9 @@ npm i @chronocide/esbuild-plugin-spider -D
 
 ## Usage
 
-As `spider` transforms and writes files, the following `esbuild` options will always be overriden:
+As `spider` transforms and writes files, the following `esbuild` options will always be overwritten:
 
 - [`write`](https://esbuild.github.io/api/#write): As spider sets output locations, write must be disabled
-- [`metafile`](https://esbuild.github.io/api/#metafile): Metafile must be enabled to get a reference to the source file
 - [`format`](https://esbuild.github.io/api/#format): Spider only supports `esm`
 - [`bundle`](https://esbuild.github.io/api/#bundle): Files must be bundled
 

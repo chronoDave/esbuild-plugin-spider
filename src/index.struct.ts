@@ -1,51 +1,43 @@
+import type { BuildResult } from 'esbuild';
+
 import esbuild from 'esbuild';
 import path from 'path';
 import fsp from 'fs/promises';
 
-import plugin from './index';
+import spider from './index';
 
 export type File = {
-  file: string;
+  path: string;
   data: string;
 };
 
 export type StructResult = {
   root: string;
-  files: Record<string, File>;
   cleanup: () => Promise<void>;
+  build: () => Promise<BuildResult>;
 };
 
-export default async (): Promise<StructResult> => {
+export default async (file: File): Promise<StructResult> => {
   const outdir = 'tmp';
   const root = path.join(process.cwd(), outdir);
+  const cleanup = async () => fsp.rm(root, { recursive: true, force: true });
 
-  const files = {
-    about: {
-      file: path.join(root, 'about.ts'),
-      data: 'export const url = "/about"; export default "<p>About</p>";'
-    },
-    home: {
-      file: path.join(root, 'home.ts'),
-      data: 'export const url = "/"; export default ({ ctimeMs }) => `<p>${ctimeMs}</p>`'
-    },
-    blog: {
-      file: path.join(root, 'blog.ts'),
-      data: 'export default [{ url: "/blog/a", html: "a" }, { url: "/blog/b", html: "b" }]'
-    }
-  };
+  try {
+    await fsp.mkdir(root);
+    await fsp.writeFile(path.join(root, file.path), file.data);
+  } catch (err) {
+    await cleanup();
 
-  await fsp.mkdir(root);
-  await Promise.all(Object.values(files).map(async ({ file, data }) => fsp.writeFile(file, data)));
-
-  await esbuild.build({
-    entryPoints: ['tmp/**/*.ts'],
-    plugins: [plugin()],
-    outdir
-  });
+    throw err;
+  }
 
   return {
     root,
-    files,
-    cleanup: async () => fsp.rm(root, { recursive: true, force: true })
+    cleanup,
+    build: async () => esbuild.build({
+      entryPoints: ['tmp/**/*.ts'],
+      plugins: [spider()],
+      outdir
+    })
   };
 };
