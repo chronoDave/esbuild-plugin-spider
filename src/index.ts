@@ -1,5 +1,5 @@
 import type { Plugin } from 'esbuild';
-import type { SpiderResult } from '@chronocide/spider';
+import type { ParseOptions, PathOptions, SpiderResult } from '@chronocide/spider';
 
 import createSpider from '@chronocide/spider';
 import path from 'path';
@@ -11,11 +11,8 @@ export type Cached = {
 };
 
 export type SpiderOptions = {
-  /** Property mapping. Default `{ url: 'url', html: 'default' }` */
-  properties?: {
-    url?: string;
-    html?: string;
-  };
+  parser?: ParseOptions;
+  path?: PathOptions;
 };
 
 export default (options?: SpiderOptions): Plugin => ({
@@ -27,8 +24,10 @@ export default (options?: SpiderOptions): Plugin => ({
 
     const cache = new Map<string, Cached>();
     const spider = createSpider({
-      properties: options?.properties,
-      outdir: build.initialOptions.outdir
+      parser: options?.parser,
+      path: {
+        outdir: options?.path?.outdir ?? build.initialOptions.outdir
+      }
     });
 
     build.onEnd(async results => {

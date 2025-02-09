@@ -9,9 +9,10 @@ import setup from './index.struct';
 
 test('[esbuild-plugin-spider] builds files', async t => {
   const file: File = { path: 'blog.ts', data: 'export const url = "/blog"; export default "<h1>blog</h1>";' };
+  const { cleanup, root, build, init } = setup(file);
 
   try {
-    const { cleanup, root, build } = await setup(file);
+    await init();
     await build();
 
     const out = path.resolve(root, 'blog.html');
@@ -32,6 +33,8 @@ test('[esbuild-plugin-spider] builds files', async t => {
     await cleanup();
   } catch (err) {
     t.fail((err as Error).message);
+  } finally {
+    await cleanup();
   }
 
   t.end();

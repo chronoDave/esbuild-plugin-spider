@@ -13,27 +13,22 @@ export type File = {
 
 export type StructResult = {
   root: string;
+  init: () => Promise<void>;
   cleanup: () => Promise<void>;
   build: () => Promise<BuildResult>;
 };
 
-export default async (file: File): Promise<StructResult> => {
+export default (file: File): StructResult => {
   const outdir = 'tmp';
   const root = path.join(process.cwd(), outdir);
-  const cleanup = async () => fsp.rm(root, { recursive: true, force: true });
-
-  try {
-    await fsp.mkdir(root);
-    await fsp.writeFile(path.join(root, file.path), file.data);
-  } catch (err) {
-    await cleanup();
-
-    throw err;
-  }
 
   return {
     root,
-    cleanup,
+    init: async () => {
+      await fsp.mkdir(root);
+      await fsp.writeFile(path.join(root, file.path), file.data);
+    },
+    cleanup: async () => fsp.rm(root, { recursive: true, force: true }),
     build: async () => esbuild.build({
       entryPoints: ['tmp/**/*.ts'],
       plugins: [spider()],
