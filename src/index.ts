@@ -52,6 +52,7 @@ export default (options?: SpiderOptions): Plugin => ({
             cache.set(file.id, { input: file.buffer, output });
           }
 
+          await fsp.mkdir(path.parse(output.path).dir, { recursive: true });
           await fsp.writeFile(output.path, output.html);
         } catch (err) {
           throw new Error(`[${file.id}] ${(err as Error).message}`);

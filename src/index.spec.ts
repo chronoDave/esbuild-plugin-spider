@@ -8,14 +8,14 @@ import path from 'path';
 import setup from './index.struct';
 
 test('[esbuild-plugin-spider] builds files', async t => {
-  const file: File = { path: 'blog.ts', data: 'export const url = "/blog"; export default "<h1>blog</h1>";' };
+  const file: File = { path: 'blog.ts', data: 'export const url = "/blog/"; export default "<h1>blog</h1>";' };
   const { cleanup, root, build, init } = setup(file);
 
   try {
     await init();
     await build();
 
-    const out = path.resolve(root, 'blog.html');
+    const out = path.resolve(root, 'blog/index.html');
     t.true(fs.existsSync(out), 'writes file');
 
     const raw = await fsp.readFile(out, 'utf-8');
