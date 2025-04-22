@@ -4,7 +4,7 @@ import esbuild from 'esbuild';
 import path from 'path';
 import fsp from 'fs/promises';
 
-import spider from './index';
+import spider from './index.ts';
 
 export type File = {
   path: string;
